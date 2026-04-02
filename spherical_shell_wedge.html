@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spherical Shell Wedge — First Octant</title>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: .02em;
+      margin-bottom: 4px;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-size: .92rem;
+      color: #94a3b8;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    #plot {
+      width: min(860px, 100%);
+      height: 600px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,.6);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+      justify-content: center;
+    }
+
+    .ctrl-group {
+      background: #1e2535;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 170px;
+    }
+
+    .ctrl-group label {
+      font-size: .78rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .ctrl-group .val {
+      font-size: .85rem;
+      color: #e2e8f0;
+      font-weight: 600;
+      min-width: 52px;
+      text-align: right;
+    }
+
+    .row { display: flex; align-items: center; gap: 8px; }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: #2d3748;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #4a90d9;
+      cursor: pointer;
+    }
+
+    .legend {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 14px;
+      font-size: .82rem;
+      color: #94a3b8;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .swatch {
+      width: 14px; height: 14px; border-radius: 3px;
+      display: inline-block; opacity: .85;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Spherical Shell Wedge &mdash; First Octant</h1>
+<p class="subtitle">
+  2 &le; &rho; &le; 3 &nbsp;|&nbsp;
+  0 &le; &phi; &le; &pi;/2 &nbsp;|&nbsp;
+  0 &le; &theta; &le; &pi;/2
+</p>
+
+<div id="plot"></div>
+
+<div class="controls">
+  <div class="ctrl-group">
+    <label>Inner radius &rho;<sub>min</sub></label>
+    <div class="row">
+      <input type="range" id="rhoMin" min="0.5" max="2.9" step="0.1" value="2">
+      <span class="val" id="rhoMinVal">2.0</span>
+    </div>
+  </div>
+  <div class="ctrl-group">
+    <label>Outer radius &rho;<sub>max</sub></label>
+    <div class="row">
+      <input type="range" id="rhoMax" min="1.0" max="4.0" step="0.1" value="3">
+      <span class="val" id="rhoMaxVal">3.0</span>
+    </div>
+  </div>
+  <div class="ctrl-group">
+    <label>&phi;<sub>max</sub> (from z-axis)</label>
+    <div class="row">
+      <input type="range" id="phiMax" min="10" max="180" step="5" value="90">
+      <span class="val" id="phiMaxVal">90°</span>
+    </div>
+  </div>
+  <div class="ctrl-group">
+    <label>&theta;<sub>max</sub> (around z-axis)</label>
+    <div class="row">
+      <input type="range" id="thetaMax" min="10" max="360" step="5" value="90">
+      <span class="val" id="thetaMaxVal">90°</span>
+    </div>
+  </div>
+  <div class="ctrl-group">
+    <label>Opacity</label>
+    <div class="row">
+      <input type="range" id="opacity" min="10" max="100" step="5" value="55">
+      <span class="val" id="opacityVal">55%</span>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <span class="legend-item"><span class="swatch" style="background:#4a90d9"></span>Outer sphere</span>
+  <span class="legend-item"><span class="swatch" style="background:#f0a500"></span>Inner sphere</span>
+  <span class="legend-item"><span class="swatch" style="background:#6abf7b"></span>Flat faces</span>
+</div>
+
+<script>
+// ── mesh helpers ──────────────────────────────────────────────────────────────
+const linspace = (a, b, n) => Array.from({length: n}, (_, i) => a + (b - a) * i / (n - 1));
+
+function sphericalCap(rho, phiArr, thetaArr) {
+  const x = [], y = [], z = [];
+  for (const th of thetaArr) {
+    const xr = [], yr = [], zr = [];
+    for (const ph of phiArr) {
+      xr.push(rho * Math.sin(ph) * Math.cos(th));
+      yr.push(rho * Math.sin(ph) * Math.sin(th));
+      zr.push(rho * Math.cos(ph));
+    }
+    x.push(xr); y.push(yr); z.push(zr);
+  }
+  return {x, y, z};
+}
+
+function flatFaceTheta(thetaFixed, rhoArr, phiArr) {
+  // face on the plane θ = thetaFixed
+  const x = [], y = [], z = [];
+  for (const rho of rhoArr) {
+    const xr = [], yr = [], zr = [];
+    for (const ph of phiArr) {
+      xr.push(rho * Math.sin(ph) * Math.cos(thetaFixed));
+      yr.push(rho * Math.sin(ph) * Math.sin(thetaFixed));
+      zr.push(rho * Math.cos(ph));
+    }
+    x.push(xr); y.push(yr); z.push(zr);
+  }
+  return {x, y, z};
+}
+
+function flatFacePhi(phiFixed, rhoArr, thetaArr) {
+  // face on the plane φ = phiFixed
+  const x = [], y = [], z = [];
+  for (const rho of rhoArr) {
+    const xr = [], yr = [], zr = [];
+    for (const th of thetaArr) {
+      xr.push(rho * Math.sin(phiFixed) * Math.cos(th));
+      yr.push(rho * Math.sin(phiFixed) * Math.sin(th));
+      zr.push(rho * Math.cos(phiFixed));
+    }
+    x.push(xr); y.push(yr); z.push(zr);
+  }
+  return {x, y, z};
+}
+
+// ── build Plotly traces ───────────────────────────────────────────────────────
+function buildTraces(rhoMin, rhoMax, phiMaxDeg, thetaMaxDeg, opacity) {
+  const N = 45;
+  const phiMax   = phiMaxDeg   * Math.PI / 180;
+  const thetaMax = thetaMaxDeg * Math.PI / 180;
+
+  const phiArr   = linspace(0, phiMax,   N);
+  const thetaArr = linspace(0, thetaMax, N);
+  const rhoArr   = linspace(rhoMin, rhoMax, N);
+
+  const surfOpts = (color, name) => ({
+    type: 'surface',
+    name,
+    colorscale: [[0, color], [1, color]],
+    showscale: false,
+    opacity,
+    lighting: { ambient: 0.7, diffuse: 0.6, specular: 0.3, roughness: 0.5 },
+    lightposition: { x: 100, y: 200, z: 300 },
+    hoverinfo: 'skip',
+    contours: { x: {highlight: false}, y: {highlight: false}, z: {highlight: false} },
+  });
+
+  const outerCap = sphericalCap(rhoMax, phiArr, thetaArr);
+  const innerCap = sphericalCap(rhoMin, phiArr, thetaArr);
+
+  const traces = [
+    { ...outerCap, ...surfOpts('#4a90d9', 'Outer sphere ρ=' + rhoMax.toFixed(1)) },
+    { ...innerCap, ...surfOpts('#f0a500', 'Inner sphere ρ=' + rhoMin.toFixed(1)) },
+  ];
+
+  // flat face at θ = 0  (xz-plane side)
+  const face1 = flatFaceTheta(0, rhoArr, phiArr);
+  traces.push({ ...face1, ...surfOpts('#6abf7b', 'Face θ=0') });
+
+  // flat face at θ = thetaMax
+  if (thetaMaxDeg < 360) {
+    const face2 = flatFaceTheta(thetaMax, rhoArr, phiArr);
+    traces.push({ ...face2, ...surfOpts('#6abf7b', 'Face θ=θmax') });
+  }
+
+  // flat face at φ = 0 (top cap, only visible if phiMax < full range)
+  // flat face at φ = phiMax
+  if (phiMaxDeg < 180) {
+    const face3 = flatFacePhi(phiMax, rhoArr, thetaArr);
+    traces.push({ ...face3, ...surfOpts('#6abf7b', 'Face φ=φmax') });
+  }
+
+  return traces;
+}
+
+// ── layout ────────────────────────────────────────────────────────────────────
+const layout = {
+  paper_bgcolor: '#0f1117',
+  margin: { l: 0, r: 0, t: 0, b: 0 },
+  scene: {
+    bgcolor: '#161b27',
+    xaxis: { title: 'x', color: '#94a3b8', gridcolor: '#2d3748', zerolinecolor: '#4a5568' },
+    yaxis: { title: 'y', color: '#94a3b8', gridcolor: '#2d3748', zerolinecolor: '#4a5568' },
+    zaxis: { title: 'z', color: '#94a3b8', gridcolor: '#2d3748', zerolinecolor: '#4a5568' },
+    aspectmode: 'cube',
+    camera: { eye: { x: 1.6, y: 1.6, z: 1.2 } },
+  },
+  showlegend: false,
+};
+
+const config = { responsive: true, displayModeBar: true, displaylogo: false };
+
+// ── initial render ────────────────────────────────────────────────────────────
+let rhoMin = 2, rhoMax = 3, phiMax = 90, thetaMax = 90, opacity = 0.55;
+Plotly.newPlot('plot', buildTraces(rhoMin, rhoMax, phiMax, thetaMax, opacity), layout, config);
+
+// ── control wiring ────────────────────────────────────────────────────────────
+function replot() {
+  Plotly.react('plot', buildTraces(rhoMin, rhoMax, phiMax, thetaMax, opacity), layout, config);
+}
+
+document.getElementById('rhoMin').addEventListener('input', e => {
+  rhoMin = parseFloat(e.target.value);
+  if (rhoMin >= rhoMax) { rhoMin = rhoMax - 0.1; e.target.value = rhoMin; }
+  document.getElementById('rhoMinVal').textContent = rhoMin.toFixed(1);
+  replot();
+});
+
+document.getElementById('rhoMax').addEventListener('input', e => {
+  rhoMax = parseFloat(e.target.value);
+  if (rhoMax <= rhoMin) { rhoMax = rhoMin + 0.1; e.target.value = rhoMax; }
+  document.getElementById('rhoMaxVal').textContent = rhoMax.toFixed(1);
+  replot();
+});
+
+document.getElementById('phiMax').addEventListener('input', e => {
+  phiMax = parseInt(e.target.value);
+  document.getElementById('phiMaxVal').textContent = phiMax + '°';
+  replot();
+});
+
+document.getElementById('thetaMax').addEventListener('input', e => {
+  thetaMax = parseInt(e.target.value);
+  document.getElementById('thetaMaxVal').textContent = thetaMax + '°';
+  replot();
+});
+
+document.getElementById('opacity').addEventListener('input', e => {
+  opacity = parseInt(e.target.value) / 100;
+  document.getElementById('opacityVal').textContent = e.target.value + '%';
+  replot();
+});
+</script>
+</body>
+</html>
