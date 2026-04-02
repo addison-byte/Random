@@ -115,7 +115,7 @@
 
 <h1>Spherical Shell &mdash; Insects Around a Light Source</h1>
 <p class="subtitle">
-  2 &le; &rho; &le; 3 &nbsp;|&nbsp;
+  2 m &le; &rho; &le; 4 m &nbsp;|&nbsp;
   0 &le; &phi; &le; &pi; &nbsp;|&nbsp;
   0 &le; &theta; &le; 2&pi;
 </p>
@@ -126,15 +126,15 @@
   <div class="ctrl-group">
     <label>Inner radius &rho;<sub>min</sub></label>
     <div class="row">
-      <input type="range" id="rhoMin" min="0.5" max="2.9" step="0.1" value="2">
-      <span class="val" id="rhoMinVal">2.0</span>
+      <input type="range" id="rhoMin" min="0.5" max="3.9" step="0.1" value="2">
+      <span class="val" id="rhoMinVal">2.0 m</span>
     </div>
   </div>
   <div class="ctrl-group">
     <label>Outer radius &rho;<sub>max</sub></label>
     <div class="row">
-      <input type="range" id="rhoMax" min="1.0" max="4.0" step="0.1" value="3">
-      <span class="val" id="rhoMaxVal">3.0</span>
+      <input type="range" id="rhoMax" min="1.0" max="4.0" step="0.1" value="4">
+      <span class="val" id="rhoMaxVal">4.0 m</span>
     </div>
   </div>
   <div class="ctrl-group">
@@ -270,9 +270,9 @@ const layout = {
   margin: { l: 0, r: 0, t: 0, b: 0 },
   scene: {
     bgcolor: '#161b27',
-    xaxis: { title: 'x', color: '#94a3b8', gridcolor: '#2d3748', zerolinecolor: '#4a5568' },
-    yaxis: { title: 'y', color: '#94a3b8', gridcolor: '#2d3748', zerolinecolor: '#4a5568' },
-    zaxis: { title: 'z', color: '#94a3b8', gridcolor: '#2d3748', zerolinecolor: '#4a5568' },
+    xaxis: { title: 'x (m)', color: '#94a3b8', gridcolor: '#2d3748', zerolinecolor: '#4a5568' },
+    yaxis: { title: 'y (m)', color: '#94a3b8', gridcolor: '#2d3748', zerolinecolor: '#4a5568' },
+    zaxis: { title: 'z (m)', color: '#94a3b8', gridcolor: '#2d3748', zerolinecolor: '#4a5568' },
     aspectmode: 'cube',
     camera: { eye: { x: 1.6, y: 1.6, z: 1.2 } },
   },
@@ -282,7 +282,7 @@ const layout = {
 const config = { responsive: true, displayModeBar: true, displaylogo: false };
 
 // ── initial render ────────────────────────────────────────────────────────────
-let rhoMin = 2, rhoMax = 3, phiMax = 180, thetaMax = 360, opacity = 0.55;
+let rhoMin = 2, rhoMax = 4, phiMax = 180, thetaMax = 360, opacity = 0.55;
 Plotly.newPlot('plot', buildTraces(rhoMin, rhoMax, phiMax, thetaMax, opacity), layout, config);
 
 // ── control wiring ────────────────────────────────────────────────────────────
@@ -293,14 +293,14 @@ function replot() {
 document.getElementById('rhoMin').addEventListener('input', e => {
   rhoMin = parseFloat(e.target.value);
   if (rhoMin >= rhoMax) { rhoMin = rhoMax - 0.1; e.target.value = rhoMin; }
-  document.getElementById('rhoMinVal').textContent = rhoMin.toFixed(1);
+  document.getElementById('rhoMinVal').textContent = rhoMin.toFixed(1) + ' m';
   replot();
 });
 
 document.getElementById('rhoMax').addEventListener('input', e => {
   rhoMax = parseFloat(e.target.value);
   if (rhoMax <= rhoMin) { rhoMax = rhoMin + 0.1; e.target.value = rhoMax; }
-  document.getElementById('rhoMaxVal').textContent = rhoMax.toFixed(1);
+  document.getElementById('rhoMaxVal').textContent = rhoMax.toFixed(1) + ' m';
   replot();
 });
 
