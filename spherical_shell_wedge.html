@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spherical Shell Wedge — First Octant</title>
+  <title>Spherical Shell — Insects Around a Light Source</title>
   <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -113,11 +113,11 @@
 </head>
 <body>
 
-<h1>Spherical Shell Wedge &mdash; First Octant</h1>
+<h1>Spherical Shell &mdash; Insects Around a Light Source</h1>
 <p class="subtitle">
   2 &le; &rho; &le; 3 &nbsp;|&nbsp;
-  0 &le; &phi; &le; &pi;/2 &nbsp;|&nbsp;
-  0 &le; &theta; &le; &pi;/2
+  0 &le; &phi; &le; &pi; &nbsp;|&nbsp;
+  0 &le; &theta; &le; 2&pi;
 </p>
 
 <div id="plot"></div>
@@ -140,15 +140,15 @@
   <div class="ctrl-group">
     <label>&phi;<sub>max</sub> (from z-axis)</label>
     <div class="row">
-      <input type="range" id="phiMax" min="10" max="180" step="5" value="90">
-      <span class="val" id="phiMaxVal">90°</span>
+      <input type="range" id="phiMax" min="10" max="180" step="5" value="180">
+      <span class="val" id="phiMaxVal">180°</span>
     </div>
   </div>
   <div class="ctrl-group">
     <label>&theta;<sub>max</sub> (around z-axis)</label>
     <div class="row">
-      <input type="range" id="thetaMax" min="10" max="360" step="5" value="90">
-      <span class="val" id="thetaMaxVal">90°</span>
+      <input type="range" id="thetaMax" min="10" max="360" step="5" value="360">
+      <span class="val" id="thetaMaxVal">360°</span>
     </div>
   </div>
   <div class="ctrl-group">
@@ -282,7 +282,7 @@ const layout = {
 const config = { responsive: true, displayModeBar: true, displaylogo: false };
 
 // ── initial render ────────────────────────────────────────────────────────────
-let rhoMin = 2, rhoMax = 3, phiMax = 90, thetaMax = 90, opacity = 0.55;
+let rhoMin = 2, rhoMax = 3, phiMax = 180, thetaMax = 360, opacity = 0.55;
 Plotly.newPlot('plot', buildTraces(rhoMin, rhoMax, phiMax, thetaMax, opacity), layout, config);
 
 // ── control wiring ────────────────────────────────────────────────────────────
